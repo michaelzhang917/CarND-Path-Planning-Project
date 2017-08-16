@@ -3,15 +3,16 @@ Self-Driving Car Engineer Nanodegree Program
 
 ## Reflection
 
-### Trajectory generation
-
-We constructed the model in MPC.c. In lines 60-72, we constructed the cost function which consisted of three parts. In the first part, we penalized the objective function based on the reference state. In the second part, we penalized the usage of the actuators. In the third part, we penalized the value gap between sequential actuations. Then in lines 89-147, we set up variables for the cost function. We set up bounds for the variables in lines 194-236. 
-
 ### Behavior planning
 
-We have use the finite state machines to plan the lane change for my car. When the car is slowing down because of the slower car in front, it checks the the ajacent avaiable lane to see whehter the lane is safe for changing. To check that, we make sure there is no car in front (the difference of s > 30) and in back (the difference s < 20). When both left and right lane are avaiable to change, we change to the lane where the front car is further. In addition, we let the car change back to the center lane when the lane is avaiable, i.e., there is no car in front of the center lane (the difference > 100).
+We have use the finite state machines to plan the lane change for my car. When the car is slowing down because of the slower car in front, it checks the the ajacent avaiable lane to see whehter the lane is safe for changing. To check that, we make sure there is no car in front (the difference of s > 30) and in back (the difference s < 20). When both left and right lane are avaiable to change, we change to the lane where the front car is further. In addition, we let the car change back to the center lane when the lane is avaiable, i.e., there is no car in front of the center lane (the difference > 100). See line 329-396 in main.cpp
+
+### Trajectory generation
+
+I follow the method introduced in the project walk through to generate the trajectory. In details, we use the local coordinate system to generate the trajectory. In addition, the spline function is used to generate the smooth trajectory. We also use the information in the spline function. See line 401-503 in main.cpp
 
 ### Results
+The car can succesfully run over 10 miles without any incident. 
 
 https://www.youtube.com/watch?v=zXaCdr5sEmA&feature=youtu.be
  
