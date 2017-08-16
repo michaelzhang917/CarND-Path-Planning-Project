@@ -1,5 +1,28 @@
-# CarND-Path-Planning-Project
+# CarND-Controls-MPC
 Self-Driving Car Engineer Nanodegree Program
+
+## Reflection
+
+### Model description
+
+We constructed the model in MPC.c. In lines 60-72, we constructed the cost function which consisted of three parts. In the first part, we penalized the objective function based on the reference state. In the second part, we penalized the usage of the actuators. In the third part, we penalized the value gap between sequential actuations. Then in lines 89-147, we set up variables for the cost function. We set up bounds for the variables in lines 194-236. 
+
+### Choice of N and dt
+
+N is the number of timesteps in the horizon. dt is how much time elapses between actuations. If Nxdt is too large, we will predict too much points in future and the enviroment may change enough. In addition, Larger values of dt result in less frequent actuations, which makes it harder to accurately approximate a continuous reference trajectory. However, when T=Nxdt is fixed, smaller values of dt will result a larger N. Then the model will become more compliate and the optimizer will take longer time to solve the model. Thus, we need to choose a resonable combination of N and dt. I have tried (N, dt) = (5, 0.2), (N, dt) = (10, 0.1) and (N, dt) = (20, 0.1) and found that (N, dt) = (10, 0.1) gave me best results.
+
+### Polynomial fitting
+
+To fit the polynomial, we shifted all the point into the car coordinate system and rotated the car heading to zero degree.
+
+### Model Predictive Control with Latency
+
+In order to handle the latency, the intial position was first projected .1 seconds into the future and then given to the MPC to process. See lines 131-143 in main.cpp for details. We assume the throttle value is approximately same as the acceraltion. 
+
+### Parameter tuning
+
+We initially set all the weights value in cost function equal to 1 and find the car can driving with maximum speed 50 miles/h  https://youtu.be/5piWJfWjpi0 . Then we increased the speed limit to 100 miles/h and the car crashed at a sharp turn  https://youtu.be/BT_tsAFVoAk . This implies the car has trouble to follow the reference path when turing with high speed. Thus I have tuned the weights in the cost function and successfully run the car with the maximum 100 miles/h limit (the actual maximum speed is 97 milse/h) https://youtu.be/J988AHH64xo . Finally, I further increased the limit to 120 miles/h and found the car has exceed 100 miles/h but has used curb maximumlly https://youtu.be/Fy7iRrcohfc 
+ 
    
 ### Simulator. You can download the Term3 Simulator BETA which contains the Path Planning Project from the [releases tab](https://github.com/udacity/self-driving-car-sim/releases).
 
