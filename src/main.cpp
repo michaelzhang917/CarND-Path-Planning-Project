@@ -9,7 +9,6 @@
 #include "Eigen-3.3/Eigen/QR"
 #include "json.hpp"
 #include "spline.h"
-
 using namespace std;
 
 // for convenience
@@ -19,6 +18,8 @@ using json = nlohmann::json;
 constexpr double pi() { return M_PI; }
 double deg2rad(double x) { return x * pi() / 180; }
 double rad2deg(double x) { return x * 180 / pi(); }
+
+
 
 // Checks if the SocketIO event has JSON data.
 // If there is data the JSON object in string format will be returned,
@@ -164,7 +165,75 @@ vector<double> getXY(double s, double d, vector<double> maps_s, vector<double> m
 
 }
 
+vector<vector<double> > Load_State(string file_name)
+{
+    ifstream in_state_(file_name.c_str(), ifstream::in);
+    vector< vector<double >> state_out;
+    string line;
+
+
+    while (getline(in_state_, line))
+    {
+        istringstream iss(line);
+    	vector<double> x_coord;
+
+    	string token;
+    	while( getline(iss,token,','))
+    	{
+    	    x_coord.push_back(stod(token));
+    	}
+    	state_out.push_back(x_coord);
+    }
+    return state_out;
+}
+vector<string> Load_Label(string file_name)
+{
+    ifstream in_label_(file_name.c_str(), ifstream::in);
+    vector< string > label_out;
+    string line;
+    while (getline(in_label_, line))
+    {
+    	istringstream iss(line);
+    	string label;
+	    iss >> label;
+
+	    label_out.push_back(label);
+    }
+    return label_out;
+
+}
+
+
+
+double lane_check(vector<vector<double>> sensor_fusion, double car_s, int lane, int prev_size){
+	bool flag = true;
+	double best_dist = 1000;
+	for (int i = 0; i < sensor_fusion.size(); i++)
+	    {
+	        float d = sensor_fusion[i][6];
+	          	if (d < (2+4*lane+2) && d> (2+4*lane -2))
+	          		{
+	          			double vx = sensor_fusion[i][3];
+	          			double vy = sensor_fusion[i][4];
+	          			double check_speed = sqrt(vx*vx + vy*vy);
+	          			double check_car_s = sensor_fusion[i][5];
+
+	          			check_car_s += ((double)prev_size*.02*check_speed);
+
+	            if (check_car_s - car_s < 30 && check_car_s - car_s > -20){
+	            	flag = false;
+	            	best_dist = 0;
+	            }
+	            else if (check_car_s > car_s && best_dist > check_car_s - car_s) {
+	            	best_dist = check_car_s - car_s;
+	            }
+	          		}
+	    }
+	return best_dist;
+}
+
 int main() {
+
   uWS::Hub h;
 
   // Load up map values for waypoint's x,y,s and d normalized normal vectors
@@ -256,6 +325,7 @@ int main() {
 
           	// find ref_v to use
 
+
           	for (int i = 0; i < sensor_fusion.size(); i++)
           	{
           		float d = sensor_fusion[i][6];
@@ -274,9 +344,30 @@ int main() {
           				// flag to try to change lanes.
           				//ref_vel = 29.5; // mph
           			    too_close = true;
-          			    if (lane > 0){
-          			    	lane = 0;
+          			    if (lane == 0){
+          			    	if (lane_check(sensor_fusion, car_s, lane +1, prev_size) > 0){
+	                           lane = 1;
+	                           cout<<"Change to the right lane to pass the car"<<endl;
+                            }
           			    }
+				    else if (lane == 2){
+				    	if (lane_check(sensor_fusion, car_s, lane-1, prev_size) > 0) {
+				    		lane = 1;
+				    		cout<<"Change to the left lane to pass the car"<<endl;
+				         }
+          			}
+				    else { 
+				    	double left_dist = lane_check(sensor_fusion, car_s, lane-1, prev_size);
+				    	double right_dist = lane_check(sensor_fusion, car_s, lane+1, prev_size);
+                        if (left_dist > right_dist){
+                        	lane = 0;
+                        	cout<<"Change to the left lane to pass the car"<<endl;
+                        }
+                        else if (right_dist > left_dist){
+                            lane = 2;
+                            cout<<"Change to the right lane to pass the car"<<endl;
+                        }
+				    }
           			}
           		}
           	}
@@ -288,6 +379,20 @@ int main() {
             else if (ref_vel < 49.5)
             {
             	ref_vel += .224;
+            }
+
+            else{
+            	if (lane == 0 && lane_check(sensor_fusion, car_s, lane +1, prev_size) > 0
+            			&& lane_check(sensor_fusion, car_s, 1, prev_size) > 100){
+            	        lane = 1;
+            	        cout<<"Change back to center lane"<<endl;
+            	}
+
+            	else if (lane == 2  && lane_check(sensor_fusion, car_s, lane - 1, prev_size) > 0
+            			&& lane_check(sensor_fusion, car_s, 1, prev_size) > 100){
+            	        lane = 1;
+            	        cout<<"Change back to center lane"<<endl;
+            	}
             }
           	// Create a list of widely spaced (x,y) waypoints, evenly spaced at 30m
           	// Later we will interpolate these waypoints with a spline and fill it in with more points that control speed
@@ -411,58 +516,7 @@ int main() {
             	next_y_vals.push_back(y_point);
 
             }
-			          	// TODO: define a path made up of (x,y) points that the car will visit sequentially every .02 seconds
 
-            	//Run as a circle
-
-//		double pos_x;
-//		double pos_y;
-//		double angle;
-//		int path_size = previous_path_x.size();
-//
-//		  for(int i = 0; i < path_size; i++)
-//		  {
-//		      next_x_vals.push_back(previous_path_x[i]);
-//		      next_y_vals.push_back(previous_path_y[i]);
-//		  }
-//
-//		  if(path_size == 0)
-//		  {
-//		      pos_x = car_x;
-//		      pos_y = car_y;
-//		      angle = deg2rad(car_yaw);
-//		  }
-//		  else
-//		  {
-//		      pos_x = previous_path_x[path_size-1];
-//		      pos_y = previous_path_y[path_size-1];
-//
-//		      double pos_x2 = previous_path_x[path_size-2];
-//		      double pos_y2 = previous_path_y[path_size-2];
-//		      angle = atan2(pos_y-pos_y2,pos_x-pos_x2);
-//		  }
-//
-//		  double dist_inc = 0.5;
-//		  for(int i = 0; i < 50-path_size; i++)
-//		  {
-//		      next_x_vals.push_back(pos_x+(dist_inc)*cos(angle+(i+1)*(pi()/100)));
-//		      next_y_vals.push_back(pos_y+(dist_inc)*sin(angle+(i+1)*(pi()/100)));
-//		      pos_x += (dist_inc)*cos(angle+(i+1)*(pi()/100));
-//		      pos_y += (dist_inc)*sin(angle+(i+1)*(pi()/100));
-//		  }
-
-
-            	// Run in the middle of the lane
-//          double dist_inc = 0.3;
-//          for (int i = 0; i< 50; i++)
-//          {
-//        	double next_s = car_s + (i+1)*dist_inc;
-//        	double next_d = 6;
-//        	vector<double> xy = getXY(next_s, next_d, map_waypoints_s, map_waypoints_x, map_waypoints_y);
-//        	next_x_vals.push_back(xy[0]);
-//        	next_y_vals.push_back(xy[1]);
-//
-//          }
             json msgJson;
           	msgJson["next_x"] = next_x_vals;
           	msgJson["next_y"] = next_y_vals;
