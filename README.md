@@ -1,11 +1,27 @@
-# CarND-Path-Planning-Project
+# CarND-Controls-MPC
 Self-Driving Car Engineer Nanodegree Program
+
+## Reflection
+
+### Behavior planning
+
+We have use the finite state machines to plan the lane change for my car. When the car is slowing down because of the slower car in front, it checks the the ajacent avaiable lane to see whehter the lane is safe for changing. To check that, we make sure there is no car in front (the difference of s > 30) and in back (the difference s < 20). When both left and right lane are avaiable to change, we change to the lane where the front car is further. In addition, we let the car change back to the center lane when the lane is avaiable, i.e., there is no car in front of the center lane (the difference > 100). See line 329-396 in main.cpp
+
+### Trajectory generation
+
+I follow the method introduced in the project walk through to generate the trajectory. In details, we use the local coordinate system to generate the trajectory. In addition, the spline function is used to generate the smooth trajectory. We also use the information in the spline function. See line 401-503 in main.cpp
+
+### Results
+The car can succesfully run over 10 miles without any incident. 
+
+https://www.youtube.com/watch?v=zXaCdr5sEmA&feature=youtu.be
+ 
    
-### Simulator. You can download the Term3 Simulator BETA which contains the Path Planning Project from the [releases tab](https://github.com/udacity/self-driving-car-sim/releases).
+## Simulator. You can download the Term3 Simulator BETA which contains the Path Planning Project from the [releases tab](https://github.com/udacity/self-driving-car-sim/releases).
 
 In this project your goal is to safely navigate around a virtual highway with other traffic that is driving +-10 MPH of the 50 MPH speed limit. You will be provided the car's localization and sensor fusion data, there is also a sparse map list of waypoints around the highway. The car should try to go as close as possible to the 50 MPH speed limit, which means passing slower traffic when possible, note that other cars will try to change lanes too. The car should avoid hitting other cars at all cost as well as driving inside of the marked road lanes at all times, unless going from one lane to another. The car should be able to make one complete loop around the 6946m highway. Since the car is trying to go 50 MPH, it should take a little over 5 minutes to complete 1 loop. Also the car should not experience total acceleration over 10 m/s^2 and jerk that is greater than 50 m/s^3.
 
-#### The map of the highway is in data/highway_map.txt
+### The map of the highway is in data/highway_map.txt
 Each waypoint in the list contains  [x,y,s,dx,dy] values. x and y are the waypoint's map coordinate position, the s value is the distance along the road to get to that waypoint in meters, the dx and dy values define the unit normal vector pointing outward of the highway loop.
 
 The highway's waypoints loop around so the frenet s value, distance along the road, goes from 0 to 6945.554.
