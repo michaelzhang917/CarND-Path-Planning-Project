@@ -394,20 +394,21 @@ int main() {
             	        cout<<"Change back to center lane"<<endl;
             	}
             }
-          	// Create a list of widely spaced (x,y) waypoints, evenly spaced at 30m
-          	// Later we will interpolate these waypoints with a spline and fill it in with more points that control speed
 
-          	vector<double> ptsx;
-          	vector<double> ptsy;
+            // Create a list of widely spaced (x,y) waypoints, evenly spaced at 30m
+            // Later we will interpolate these waypoints with a spline and fill it in with more points that control speed
 
-          	// reference x, y ,yaw states
-          	// either we will reference the starting point as where the car is or at the previous paths end point
+            vector<double> ptsx;
+            vector<double> ptsy;
 
-          	double ref_x = car_x;
-          	double ref_y = car_y;
-          	double ref_yaw = deg2rad(car_yaw);
+            // reference x, y ,yaw states
+            // either we will reference the starting point as where the car is or at the previous paths end point
 
-          	// if previous size is almost empty, use the car as starting reference
+            double ref_x = car_x;
+            double ref_y = car_y;
+            double ref_yaw = deg2rad(car_yaw);
+
+            // if previous size is almost empty, use the car as starting reference
             if (prev_size < 2)
             {
         	// Use two points that make the path tangent to the car
@@ -447,45 +448,39 @@ int main() {
             vector<double> next_wp2 = getXY(car_s + 90, (2 + 4*lane), map_waypoints_s, map_waypoints_x, map_waypoints_y);
 
             ptsx.push_back(next_wp0[0]);
-			ptsx.push_back(next_wp1[0]);
-			ptsx.push_back(next_wp2[0]);
+            ptsx.push_back(next_wp1[0]);
+	    ptsx.push_back(next_wp2[0]);
 
-			ptsy.push_back(next_wp0[1]);
-			ptsy.push_back(next_wp1[1]);
-			ptsy.push_back(next_wp2[1]);
+	    ptsy.push_back(next_wp0[1]);
+	    ptsy.push_back(next_wp1[1]);
+            ptsy.push_back(next_wp2[1]);
 
-			for (int i = 0; i < ptsx.size(); i++)
-			{
-				//shift car reference angle to 0 degree
-				double shift_x = ptsx[i] - ref_x;
-				double shift_y = ptsy[i] - ref_y;
-
-				ptsx[i] = (shift_x*cos(0 - ref_yaw) - shift_y*sin(0 - ref_yaw));
-				ptsy[i] = (shift_x*sin(0 - ref_yaw) + shift_y*cos(0 - ref_yaw));
-
-			}
-
-			// create a spline
-			tk::spline s;
-
-			// set(x,y) points to spline
-
-			s.set_points(ptsx, ptsy);
-
-			//
-
-
-
-			vector<double> next_x_vals;
-          	vector<double> next_y_vals;
-
-          	for(int i = 0; i < previous_path_x.size(); i++)
+            for (int i = 0; i < ptsx.size(); i++)	
             {
-          		next_x_vals.push_back(previous_path_x[i]);
-          		next_y_vals.push_back(previous_path_y[i]);
-          	}
+		//shift car reference angle to 0 degree
+		double shift_x = ptsx[i] - ref_x;
+		double shift_y = ptsy[i] - ref_y;
+		ptsx[i] = (shift_x*cos(0 - ref_yaw) - shift_y*sin(0 - ref_yaw));
+		ptsy[i] = (shift_x*sin(0 - ref_yaw) + shift_y*cos(0 - ref_yaw));
+            }
 
-          	// Calculate how to break up spline points so that we travel at our desired reference velocity
+	    // create a spline
+	    tk::spline s;
+
+	    // set(x,y) points to spline
+
+	    s.set_points(ptsx, ptsy);
+	
+	    vector<double> next_x_vals;
+            vector<double> next_y_vals;
+
+            for(int i = 0; i < previous_path_x.size(); i++)
+            {
+          	next_x_vals.push_back(previous_path_x[i]);
+          	next_y_vals.push_back(previous_path_y[i]);
+       	    }
+
+           // Calculate how to break up spline points so that we travel at our desired reference velocity
             double target_x = 30.0;
             double target_y = s(target_x);
             double target_dist = sqrt(target_x * target_x + target_y * target_y);
