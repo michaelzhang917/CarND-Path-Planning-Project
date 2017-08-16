@@ -206,30 +206,24 @@ vector<string> Load_Label(string file_name)
 
 
 double lane_check(vector<vector<double>> sensor_fusion, double car_s, int lane, int prev_size){
-	bool flag = true;
-	double best_dist = 1000;
-	for (int i = 0; i < sensor_fusion.size(); i++)
-	    {
-	        float d = sensor_fusion[i][6];
-	          	if (d < (2+4*lane+2) && d> (2+4*lane -2))
-	          		{
-	          			double vx = sensor_fusion[i][3];
-	          			double vy = sensor_fusion[i][4];
-	          			double check_speed = sqrt(vx*vx + vy*vy);
-	          			double check_car_s = sensor_fusion[i][5];
-
-	          			check_car_s += ((double)prev_size*.02*check_speed);
-
-	            if (check_car_s - car_s < 30 && check_car_s - car_s > -20){
-	            	flag = false;
-	            	best_dist = 0;
-	            }
-	            else if (check_car_s > car_s && best_dist > check_car_s - car_s) {
-	            	best_dist = check_car_s - car_s;
-	            }
-	          		}
-	    }
-	return best_dist;
+    double best_dist = 1000;
+    for (int i = 0; i < sensor_fusion.size(); i++){
+        float d = sensor_fusion[i][6];
+        if (d < (2+4*lane+2) && d> (2+4*lane -2)){
+	     double vx = sensor_fusion[i][3];
+	     double vy = sensor_fusion[i][4];
+	     double check_speed = sqrt(vx*vx + vy*vy);
+	     double check_car_s = sensor_fusion[i][5];
+             check_car_s += ((double)prev_size*.02*check_speed);
+	     if (check_car_s - car_s < 30 && check_car_s - car_s > -20){
+	           best_dist = 0;
+	     }
+	     else if (check_car_s > car_s && best_dist > check_car_s - car_s) {
+	           best_dist = check_car_s - car_s;
+	     }
+	 }
+    }
+    return best_dist;
 }
 
 int main() {
