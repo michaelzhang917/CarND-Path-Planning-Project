@@ -9,6 +9,7 @@ We constructed the model in MPC.c. In lines 60-72, we constructed the cost funct
 
 ### Behavior planning
 
+We have use the finite state machines to plan the lane change for my car. When the car is slowing down because of the slower car in front, it checks the the ajacent avaiable lane to see whehter the lane is safe for changing. To check that, we make sure there is no car in front (the difference of s > 30) and in back (the difference s < 20). When both left and right lane are avaiable to change, we change to the lane where the front car is further. In addition, we let the car change back to the center lane when the lane is avaiable, i.e., there is no car in front of the center lane (the difference > 100).
 
 ### Results
 
